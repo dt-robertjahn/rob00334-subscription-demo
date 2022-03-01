@@ -5,6 +5,7 @@ metadata:
 spec:
   webhooks:
     - type: sh.keptn.event.mytask.triggered
+      sendFinished: true
       requests:
         - curl --request POST --data
           '{"event":"{{.type}}","stage":"{{.data.stage}}","result":"{{.data.result}}
