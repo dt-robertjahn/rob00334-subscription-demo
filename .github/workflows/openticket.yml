@@ -1,0 +1,46 @@
+name: webhook interactive example
+on:
+  repository_dispatch:
+    types: 
+      - openticket
+jobs:
+  openticket:
+    name: openticket
+    runs-on: ubuntu-latest
+    steps:
+    - name: show client_payload
+      run: |
+        echo "Received webhook displaying client_payload data"
+        echo "type": "${{ github.event.client_payload.type }}"
+        echo "id": "${{ github.event.client_payload.id }}"
+        echo "shkeptncontext": "${{ github.event.client_payload.shkeptncontext }}"
+    - name: open ticket
+      run: echo "Performing openticketlogic"
+    - name: send finished event
+      run: |
+        echo "Received interactive webhook, will send back Keptn finished event"
+        json=$(cat <<-END
+            {
+              "data": {
+                "project":"${{ github.event.client_payload.project }}",
+                "stage": "${{ github.event.client_payload.stage}}",
+                "service": "${{ github.event.client_payload.service}}",
+                "status": "succeeded",
+                "result": "pass",
+                "openticket": {
+                  "IncidentUrl": "https://www.google.com/search?q=incidentNum123"
+                }
+                "labels": {
+                  "IncidentUrl": "https://www.google.com/search?q=incidentNum123"
+                 }
+              },
+              "source": "github",
+              "specversion": "1.0",
+              "type": "sh.keptn.event.openticket.finished",
+              "shkeptncontext": "${{ github.event.client_payload.shkeptncontext }}",
+              "triggeredid": "${{ github.event.client_payload.id }}"
+            }
+        END
+        )
+        echo "json=$json"
+        curl -X POST "${{ secrets.KEPTN_API_URL }}/v1/event" -H "Content-Type: application/json" -H "accept: application/json" -H "x-token: ${{ secrets.KEPTN_API_TOKEN }}" -d "$json"
